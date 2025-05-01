@@ -1,5 +1,6 @@
 package gotextsearch
 
+// levenshtein distance algorithm
 func levenshtein(a, b string) int {
 	matrix := make([][]int, len(a)+1)
 	for i := range matrix {
@@ -27,6 +28,7 @@ func levenshtein(a, b string) int {
 	return matrix[len(a)][len(b)]
 }
 
+// minFromThree returns the minimum of three integers
 func minFromThree(a, b, c int) int {
 	if a < b && a < c {
 		return a

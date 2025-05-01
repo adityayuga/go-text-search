@@ -51,19 +51,25 @@ type (
 	}
 )
 
+// New create a new inverted index with the default configuration
 func New() SearchIndex {
 	return NewWithConfig(Config{})
 }
 
+// NewWithConfig create a new inverted index with the given configuration
 func NewWithConfig(cfg Config) SearchIndex {
 	if cfg.Tokenizer == nil {
 		cfg.Tokenizer = Tokenize
 	}
-	if cfg.Preprocessor == nil {
-		cfg.Preprocessor = []func(string) string{
-			strings.ToLower,
-		}
+
+	listPreprocessor := []func(string) string{
+		strings.ToLower,
 	}
+
+	for _, preprocessor := range cfg.Preprocessor {
+		listPreprocessor = append(listPreprocessor, preprocessor)
+	}
+
 	if cfg.StopWords == nil {
 		cfg.StopWords = []string{}
 	}
