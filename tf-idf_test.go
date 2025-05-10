@@ -30,15 +30,21 @@ func Test_invertedIndex(t *testing.T) {
 		"GoJet Airlines (Bridgeton)",
 		"Graybar (Clayton)",
 		"H&R Block (Kansas City)",
+		"PT Bank Mandiri (Persero) Tbk (Jakarta)",
 	})
 
 	results := idx.Search("Hello", 10)
-	if results[0].Text != "Hello world" {
-		t.Errorf("Search() = %v, want %v", results, "Hello world")
+	if results[0].Text != "hello world" {
+		t.Errorf("Search() = %v, want %v", results, "hello world")
 	}
 
 	results2 := idx.Search("corpration", 10)
-	if results2[0].Text != "Centene Corporation (St. Louis)" {
-		t.Errorf("Search() = %v, want %v", results, "Centene Corporation (St. Louis)")
+	if results2[0].Text != "centene corporation (st. louis)" {
+		t.Errorf("Search() = %v, want %v", results2, "centene corporation (st. louis)")
+	}
+
+	results3 := idx.Search("mandiri", 10)
+	if results3[0].Text != "pt bank mandiri (persero) tbk (jakarta)" {
+		t.Errorf("Search() = %v, want %v", results3, "PT Bank Mandiri (Persero) Tbk (Jakarta)")
 	}
 }

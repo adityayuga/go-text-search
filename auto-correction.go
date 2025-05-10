@@ -1,5 +1,23 @@
 package gotextsearch
 
+// autoCorrectQueryTerm will return the best match for a term based on Levenshtein distance
+func (idx *invertedIndex) autoCorrectQueryTerm(term string) string {
+	best := term
+	maxDist := 2
+	bestDist := maxDist + 1
+	for known := range idx.vocab {
+		d := levenshtein(term, known)
+		if d < bestDist {
+			best = known
+			bestDist = d
+			if d == 1 {
+				break
+			}
+		}
+	}
+	return best
+}
+
 // levenshtein distance algorithm
 func levenshtein(a, b string) int {
 	matrix := make([][]int, len(a)+1)

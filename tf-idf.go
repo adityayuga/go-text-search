@@ -26,16 +26,17 @@ type (
 		vocab      map[string]bool
 
 		// configuration
-		stopWords                       map[string]bool
-		preprocessor                    []func(string) string
-		tokenizer                       func(string) []string
-		autoCorrectQueryTermMaxDistance int
+		stopWords              map[string]bool
+		preprocessor           []func(string) string
+		tokenizer              func(string) []string
+		queryTermAutocorrector func(string) string
 	}
 
 	Config struct {
-		StopWords    []string
-		Preprocessor []func(string) string
-		Tokenizer    func(string) []string
+		StopWords              []string
+		Preprocessor           []func(string) string
+		Tokenizer              func(string) []string
+		QueryTermAutoCorrector func(string) string
 	}
 
 	SearchResult struct {
@@ -66,9 +67,7 @@ func NewWithConfig(cfg Config) SearchIndex {
 		strings.ToLower,
 	}
 
-	for _, preprocessor := range cfg.Preprocessor {
-		listPreprocessor = append(listPreprocessor, preprocessor)
-	}
+	listPreprocessor = append(listPreprocessor, cfg.Preprocessor...)
 
 	if cfg.StopWords == nil {
 		cfg.StopWords = []string{}
@@ -82,9 +81,9 @@ func NewWithConfig(cfg Config) SearchIndex {
 		docLengths: make(map[int]float64),
 		vocab:      make(map[string]bool),
 
-		preprocessor:                    cfg.Preprocessor,
-		tokenizer:                       cfg.Tokenizer,
-		autoCorrectQueryTermMaxDistance: 2,
+		preprocessor:           listPreprocessor,
+		tokenizer:              cfg.Tokenizer,
+		queryTermAutocorrector: cfg.QueryTermAutoCorrector,
 	}
 
 	idx.stopWords = make(map[string]bool)
@@ -236,25 +235,13 @@ func (idx *invertedIndex) preprocessQuery(query string) []string {
 		if idx.vocab[t] {
 			corrected = append(corrected, t)
 		} else {
-			corrected = append(corrected, idx.autoCorrectQueryTerm(t, idx.autoCorrectQueryTermMaxDistance))
-		}
-	}
-	return corrected
-}
-
-// autoCorrectQueryTerm will return the best match for a term based on Levenshtein distance
-func (idx *invertedIndex) autoCorrectQueryTerm(term string, maxDist int) string {
-	best := term
-	bestDist := maxDist + 1
-	for known := range idx.vocab {
-		d := levenshtein(term, known)
-		if d < bestDist {
-			best = known
-			bestDist = d
-			if d == 1 {
-				break
+			if idx.queryTermAutocorrector != nil {
+				corrected = append(corrected, idx.queryTermAutocorrector(t))
+			} else {
+				// if no autocorrector, just using the default autoCorrectQueryTerm
+				corrected = append(corrected, idx.autoCorrectQueryTerm(t))
 			}
 		}
 	}
-	return best
+	return corrected
 }
